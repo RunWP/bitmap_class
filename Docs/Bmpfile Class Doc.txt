@@ -1,0 +1,192 @@
+
+################################################################################
+#                               Bmpfile Class Doc                              #
+################################################################################
+
+# Provide bitmap file (.bmp) management tools
+
+################################################################################
+#                                    IMPORTS                                   #
+################################################################################
+
+from math import ceil, floor
+from os.path import abspath, isfile, basename, splitext, getsize, isdir, dirname
+
+################################################################################
+#                                   FUNCTIONS                                  #
+################################################################################
+
+'list' = int_to_bytlst('intval', 'intlen')
+# Convert a integer (int) to little-endian byte list (list)
+
+'integer' = bytlst_to_int('bytlst')
+# Convert a little-endian byte list (list) to integer (int)
+
+################################################################################
+#                                     CLASS                                    #
+################################################################################
+
+class Bmpfile
+# <class 'Bmpfile'> to open and create bitmap file (.bmp)
+
+    self.__init__()
+    # Construct a bitmap file structure
+
+################################################################################
+#                                  PROPERTIES                                  #
+################################################################################
+# In BMP files the least significant byte is put first (little-endian)
+# B = 1 Bytes, W = 2 Bytes, DW = 4 Bytes, A = Array, S = String
+# {Chk}: Checked, {Use}: Used, {Cal}: Calculate, {Uls}: Useless
+
+        # Bitmap Header (hdr)
+        self.fletype = 0x4D42              # FileType           W   {Chk} hdrlst[0:2]
+        self.flesize = 58                  # FileSize           DW  {Cal} hdrlst[2:6]
+        self.reservd = 0                   # Reserved           DW  {Uls} hdrlst[6:10]
+        self.bmpofst = 54                  # BitmapOffset       DW  {Cal} hdrlst[10:14]
+        self.hdrsize = 40                  # HeaderSize         DW  {Chk} hdrlst[14:18]
+        self.bmpwdth = 1                   # BitmapWidth        DW  {Use} hdrlst[18:22]
+        self.bmphght = 1                   # BitmapHeight       DW  {Use} hdrlst[22:26]
+        self.plnecnt = 1                   # PlanesCount        W   {Chk} hdrlst[26:28]
+        self.bitppxl = 24                  # BitsPerPixel       W   {Use} hdrlst[28:30]
+        self.comprss = 0                   # Compression        DW  {Chk} hdrlst[30:34]
+        self.bmpsize = 4                   # BitmapSize         DW  {Cal} hdrlst[34:38]
+        self.hozreso = 0                   # H_Resolution       DW  {Uls} hdrlst[38:42]
+        self.vrtreso = 0                   # V_Resolution       DW  {Uls} hdrlst[42:46]
+        self.colruse = 0                   # ColorsUsed         DW  {Uls} hdrlst[46:50]
+        self.colrimp = 0                   # ColorsImportant    DW  {Uls} hdrlst[50:54]
+        # Bitmap Palette (pal)
+        self.pal = []                      # PaletteColors      DWA {Use} pallst[0:palsize]
+        # Bitmap Data (bmp)
+        self.bmp = [255, 255, 255, 0]      # BitmapData         BA  {Use} bmplst[0:bmpsize]
+        # Bitmap Useful Properties
+        self.flepath = ""                  # FilePath           S   {Use}
+        self.bytplne = 4                   # BytesPerLine       DW  {Cal}
+        self.bytplnu = 3                   # BytesPerLineUsed   DW  {Cal}
+        self.bytplna = 1                   # BytesPerLineAdded  DW  {Cal}
+        self.bmpxmin = 0                   # BmpXmin            DW  {Cal}
+        self.bmpxmax = 0                   # BmpXmax            DW  {Cal}
+        self.bmpymin = 0                   # BmpYmin            DW  {Cal}
+        self.bmpymax = 0                   # BmpYmax            DW  {Cal}
+        self.palccnt = 0                   # PaletteColorsCount DW  {Cal}
+        self.palofst = 54                  # PaletteOffset      DW  {Cal}
+        self.palsize = 0                   # PaletteSize        DW  {Cal}
+        # Bitmap Error Management
+        self.err = []                      # ErrorList          SA  {Use}
+
+################################################################################
+#                                    METHODS                                   #
+################################################################################
+
+    self.clean()
+    # Set bitmap file structure with initial values (w1 h1 @24bpp)
+
+    'list' = self.hdr_lst()
+    # Return bitmap header list format
+
+    self.set_hdr('hdrlst')
+    # Set bitmap header properties from bitmap header list format
+
+    'list' = self.pal_lst()
+    # Return bitmap palette list format
+
+    self.set_pal('pallst')
+    # Set bitmap palette property from bitmap palette list format
+
+    'list' = self.bmp_lst()
+    # Return bitmap data list format
+
+    self.set_bmp('bmplst')
+    # Set bitmap data property from bitmap data list format
+
+    'dictionary' = self.info_dict()
+    # Return bitmap file structure information dictionary
+
+    'string' = self.info_str()
+    # Return bitmap file structure information string
+
+    'list' = self.pal_info()
+    # Return bitmap palette information list
+
+    'string' = self.pal_infostr()
+    # Return bitmap palette information string
+
+    'integer' = self.pal_getcolor('index')
+    # Return bitmap palette index color (0xRRGGBB) or (-1) if index is out of bounds
+
+    self.pal_setcolor('index', 'color')
+    # Set bitmap palette index color (0xRRGGBB) if index isn't out of bounds
+
+    self.pal_stdinit()
+    # Palette initialisation with standard colors (paint palette)
+
+    self.bmp_stdinit()
+    # Bitmap initialisation with standard background color (white)
+
+    'boolean' = self.check_hdr()
+    # Check bitmap header for restricted and mandatory parameters
+
+    self.calculate()
+    # Bitmap file structure properties calculation
+
+    'string' = self.filebasename()
+    # Return file base name only (Without extension)
+
+    'integer' = self.filelen()
+    # Return file size or (-1) if file doesn't exists or is inaccessible
+
+    'boolean' = self.is_openable()
+    # Check file path and size
+
+    'boolean' = self.is_savable('replace')
+    # Check parent folder path and if existing file can be replaced
+
+    'boolean' = self.checksize()
+    # Compare real file size with calculated size (theoretical size)
+
+    'boolean' = self.load_hdr()
+    # Load bitmap header from file
+
+    'boolean' = self.load_pal()
+    # Load bitmap palette from file
+
+    'boolean' = self.load_bmp()
+    # Load bitmap data from file
+
+    'boolean' = self.save()
+    # Save bitmap file structure to file
+
+    'list' = self.err_lst()
+    # Return current errors list
+
+    'string' = self.err_str()
+    # Return current errors string
+
+    'integer' = self.err_count()
+    # Return current errors count
+
+    self.err_clear()
+    # Clear current errors list
+
+    'color' = self.pixelcolor('x_pos', 'y_pos', 'truecolor')
+    # If pixel (x, y) is in GFX area, returns its color, otherwise returns (-1) (Pixel doesn't exists)
+    # For 1, 4, 8 bpp: returns the palette color index or the true RGB color if (truecolor) is set to 'True'
+    # For 24 bpp: always returns the true RGB color (0xRRGGBB)
+
+    self.drawpixel('x_pos', 'y_pos', 'color')
+    # If pixel (x, y) is in GFX area, sets its color (c), otherwise does nothing
+    # For 1, 4, 8 bpp: (c) is the palette color index
+    # For 24 bpp: (c) is the true RGB color (0xRRGGBB)
+
+    'boolean' = self.create('width', 'height', 'bpp')
+    # Initialise a new bitmap file structure
+
+    'boolean' = self.open('spath')
+    # Load bitmap file structure from file (.bmp)
+
+    'boolean' = self.saveas('spath', 'replace')
+    # Save bitmap file structure to file (.bmp)
+
+################################################################################
+#                                      EOF                                     #
+################################################################################
